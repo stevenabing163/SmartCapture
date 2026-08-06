@@ -1,6 +1,6 @@
 # SmartCapture — 智能待办捕获工具
 
-> 由 **King with Trae** 制作
+> 由 **King with Trae** 制作 · [English Version](README.en.md)
 
 一款 Windows 桌面端智能待办捕获工具，能将**剪贴板文本、截图内容**快速转化为待办事项或日历事件。
 
