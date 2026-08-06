@@ -1,0 +1,80 @@
+name: CI - Lint & Validate
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate Code
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Check Syntax
+        run: |
+          node -c main.js
+          node -c preload.js
+          node -c src/core/store.js
+          node -c src/core/parser.js
+          node -c src/core/web-server.js
+          node -c src/core/screenshot.js
+          node -c src/core/clipboard.js
+          node -c src/core/hotkey.js
+          node -c src/core/tray.js
+          node -c build-portable.js
+          echo "All syntax checks passed!"
+
+      - name: Verify Critical Files
+        run: |
+          $files = @(
+            "src/ui/index.html",
+            "src/ui/styles.css",
+            "src/ui/renderer.js",
+            "src/ui/manifest.json",
+            "src/ui/service-worker.js",
+            "src/ui/icons/icon-192.png",
+            "src/ui/icons/icon-512.png",
+            "README.md",
+            "README.en.md",
+            "docs/index.html",
+            "package.json",
+            ".gitignore"
+          )
+          $allExist = $true
+          foreach ($f in $files) {
+            if (!(Test-Path $f)) {
+              Write-Host "MISSING: $f"
+              $allExist = $false
+            } else {
+              Write-Host "OK: $f"
+            }
+          }
+          if (!$allExist) { exit 1 }
+          Write-Host "All critical files verified!"
+
+      - name: Check package.json Consistency
+        run: |
+          $pkg = Get-Content package.json | ConvertFrom-Json
+          Write-Host "Package: $($pkg.name) v$($pkg.version)"
+          Write-Host "Author: $($pkg.author)"
+          if ($pkg.author -ne "King with Trae") {
+            Write-Error "Author is not King with Trae!"
+            exit 1
+          }
+          Write-Host "Package.json looks good!"

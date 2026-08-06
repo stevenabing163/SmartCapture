@@ -1,12 +1,12 @@
-# Dependencies
-node_modules/
-
 # Build output
 dist/
 out/
 
 # Data
 data/
+
+# Dependencies
+node_modules/
 
 # OS files
 .DS_Store
@@ -26,3 +26,6 @@ npm-debug.log*
 
 # Portable build
 SmartCapture-Portable.zip
+
+# Release temp
+release-notes.md.bak

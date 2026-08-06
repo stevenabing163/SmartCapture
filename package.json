@@ -1,6 +1,6 @@
 {
   "name": "smart-capture",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Windows 桌面端智能待办捕获工具 — 剪贴板/截图/通讯内容 → 待办/日历",
   "main": "main.js",
   "scripts": {
@@ -8,6 +8,10 @@
     "dev": "electron . --dev",
     "build": "electron-builder --win",
     "build:portable": "node build-portable.js",
+    "release": "node release.mjs",
+    "release:patch": "node release.mjs --version patch",
+    "release:minor": "node release.mjs --version minor",
+    "release:major": "node release.mjs --version major",
     "build:dir": "electron-builder --win portable",
     "build:mac": "electron-builder --mac",
     "build:linux": "electron-builder --linux",

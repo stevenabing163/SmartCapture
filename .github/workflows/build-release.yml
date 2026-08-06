@@ -1,0 +1,79 @@
+name: Build & Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version tag (e.g. v1.0.0)'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build SmartCapture
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Build Portable Version
+        run: npm run build:portable
+
+      - name: Verify Build Output
+        run: |
+          if (!(Test-Path "dist/SmartCapture-Portable/SmartCapture.exe")) {
+            Write-Error "SmartCapture.exe not found!"
+            exit 1
+          }
+          if (!(Test-Path "dist/SmartCapture-Portable.zip")) {
+            Write-Error "ZIP archive not found!"
+            exit 1
+          }
+          Write-Host "Build verified successfully"
+          Get-ChildItem "dist/" -Recurse -Depth 1 | Select-Object Name, Length
+
+      - name: Get Version
+        id: version
+        run: |
+          $pkg = Get-Content package.json | ConvertFrom-Json
+          "version=$($pkg.version)" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8
+          "zip=SmartCapture-Portable.zip" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: SmartCapture ${{ github.ref_name }}
+          body_path: release-notes.md
+          files: |
+            dist/SmartCapture-Portable.zip
+            dist/SmartCapture-Portable/SmartCapture.exe
+            dist/SmartCapture-Portable/启动SmartCapture.bat
+            dist/SmartCapture-Portable/README.txt
+            便携版使用说明.md
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: smartcapture-build
+          path: dist/SmartCapture-Portable/
+          retention-days: 7
