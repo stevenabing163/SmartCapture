@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SmartCapture — 智能待办捕获工具 | 在线演示</title>
+<meta name="description" content="SmartCapture 在线演示 — 剪贴板/截图/AI → 待办/日历">
+<style>
+  :root {
+    --primary: #4A90D9;
+    --primary-dark: #357ABD;
+    --primary-light: #E8F1FC;
+    --success: #52C41A;
+    --warning: #FAAD14;
+    --danger: #FF4D4F;
+    --bg: #F5F7FA;
+    --bg-card: #FFFFFF;
+    --bg-sidebar: #2C3E50;
+    --bg-sidebar-hover: #34495E;
+    --text: #2C3E50;
+    --text-secondary: #7F8C8D;
+    --border: #E4E7ED;
+    --shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.15);
+    --radius: 8px;
+    --radius-lg: 16px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    color: var(--text);
+    background: var(--bg);
+    line-height: 1.6;
+  }
+
+  .hero {
+    background: linear-gradient(135deg, #2C3E50 0%, #4A90D9 100%);
+    color: white;
+    padding: 60px 20px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
+    animation: pulse 8s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+  }
+
+  .hero-content { position: relative; z-index: 1; max-width: 800px; margin: 0 auto; }
+  .hero h1 { font-size: 48px; margin-bottom: 16px; font-weight: 700; }
+  .hero .subtitle { font-size: 20px; opacity: 0.9; margin-bottom: 32px; }
+  .hero .tagline { font-size: 16px; opacity: 0.8; margin-bottom: 24px; }
+
+  .cta-buttons { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+  .btn-cta {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 14px 32px;
+    border-radius: var(--radius);
+    font-size: 16px; font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    border: none; cursor: pointer;
+  }
+  .btn-cta-primary {
+    background: white; color: var(--primary-dark);
+  }
+  .btn-cta-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+  }
+  .btn-cta-secondary {
+    background: rgba(255,255,255,0.2); color: white;
+    border: 2px solid rgba(255,255,255,0.3);
+  }
+  .btn-cta-secondary:hover {
+    background: rgba(255,255,255,0.3);
+  }
+
+  .container { max-width: 1200px; margin: 0 auto; padding: 60px 20px; }
+
+  .section-title {
+    text-align: center;
+    font-size: 32px;
+    margin-bottom: 16px;
+    color: var(--text);
+  }
+  .section-subtitle {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 16px;
+    margin-bottom: 48px;
+  }
+
+  /* Features */
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+    margin-bottom: 60px;
+  }
+
+  .feature-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    padding: 32px;
+    box-shadow: var(--shadow);
+    transition: all 0.3s ease;
+    border: 1px solid var(--border);
+  }
+  .feature-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+  }
+  .feature-icon {
+    width: 56px; height: 56px;
+    background: var(--primary-light);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px;
+    margin-bottom: 16px;
+  }
+  .feature-card h3 { font-size: 18px; margin-bottom: 8px; }
+  .feature-card p { color: var(--text-secondary); font-size: 14px; }
+
+  /* App Preview */
+  .preview-section {
+    background: #1a1a2e;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-lg);
+    margin: 40px 0;
+  }
+  .preview-toolbar {
+    background: #2d2d44;
+    padding: 12px 16px;
+    display: flex; align-items: center;
+    gap: 8px;
+  }
+  .preview-dot { width: 12px; height: 12px; border-radius: 50%; }
+  .preview-dot.red { background: #ff5f56; }
+  .preview-dot.yellow { background: #ffbd2e; }
+  .preview-dot.green { background: #27c93f; }
+  .preview-title { margin-left: 16px; color: #999; font-size: 13px; }
+
+  .preview-body {
+    background: var(--bg);
+    display: flex;
+    min-height: 500px;
+  }
+
+  /* Sidebar */
+  .app-sidebar {
+    width: 220px;
+    background: var(--bg-sidebar);
+    color: white;
+    padding: 20px 0;
+    flex-shrink: 0;
+  }
+  .app-logo {
+    display: flex; align-items: center; gap: 12px;
+    padding: 0 20px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    margin-bottom: 16px;
+  }
+  .app-logo-icon { font-size: 28px; }
+  .app-logo-text h2 { font-size: 16px; }
+  .app-logo-text p { font-size: 12px; opacity: 0.7; }
+
+  .app-nav { display: flex; flex-direction: column; padding: 0 12px; }
+  .app-nav-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    color: rgba(255,255,255,0.8);
+    transition: all 0.2s;
+    font-size: 14px;
+    border: none; background: none;
+    text-align: left;
+    width: 100%;
+  }
+  .app-nav-item:hover { background: var(--bg-sidebar-hover); }
+  .app-nav-item.active {
+    background: var(--primary);
+    color: white;
+  }
+  .app-nav-icon { font-size: 18px; width: 24px; text-align: center; }
+  .app-nav-badge {
+    margin-left: auto;
+    background: var(--primary);
+    color: white;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 10px;
+  }
+  .app-nav-item:not(.active) .app-nav-badge { background: rgba(255,255,255,0.2); }
+
+  .app-stats {
+    margin-top: auto;
+    padding: 16px 20px 0;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    display: flex; gap: 12px;
+  }
+  .app-stat { text-align: center; flex: 1; }
+  .app-stat-value { font-size: 20px; font-weight: 700; }
+  .app-stat-label { font-size: 11px; opacity: 0.7; }
+
+  /* Main content */
+  .app-main { flex: 1; padding: 24px; overflow-y: auto; }
+
+  .app-toolbar {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 24px;
+  }
+  .app-search {
+    flex: 1;
+    padding: 10px 16px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: white;
+    font-size: 14px;
+  }
+  .app-btn {
+    padding: 10px 16px;
+    border-radius: var(--radius);
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s;
+  }
+  .app-btn-ghost {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+  .app-btn-ghost:hover { background: var(--bg-hover, #f0f0f0); }
+  .app-btn-primary {
+    background: var(--primary);
+    color: white;
+  }
+  .app-btn-primary:hover { background: var(--primary-dark); }
+
+  .view-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 20px;
+  }
+  .view-header h2 { font-size: 22px; }
+
+  .filter-tabs { display: flex; gap: 8px; }
+  .filter-tab {
+    padding: 6px 16px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: white;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.2s;
+  }
+  .filter-tab.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+  }
+
+  /* Task cards */
+  .task-list { display: flex; flex-direction: column; gap: 12px; }
+  .task-card {
+    background: white;
+    border-radius: var(--radius);
+    padding: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    border: 1px solid var(--border);
+    display: flex; gap: 12px;
+    transition: all 0.2s;
+  }
+  .task-card:hover { box-shadow: var(--shadow); }
+  .task-checkbox {
+    width: 20px; height: 20px;
+    border: 2px solid var(--border);
+    border-radius: 4px;
+    cursor: pointer;
+    flex-shrink: 0;
+    margin-top: 2px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+  .task-checkbox.checked {
+    background: var(--success);
+    border-color: var(--success);
+    color: white;
+  }
+  .task-content { flex: 1; }
+  .task-title {
+    font-size: 15px; font-weight: 500;
+    margin-bottom: 6px;
+  }
+  .task-card.completed .task-title {
+    text-decoration: line-through;
+    color: var(--text-secondary);
+  }
+  .task-meta {
+    display: flex; gap: 12px; flex-wrap: wrap;
+    font-size: 12px; color: var(--text-secondary);
+  }
+  .task-tag {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+  }
+  .tag-priority-1 { background: #E8F5E9; color: #2E7D32; }
+  .tag-priority-2 { background: #FFF3E0; color: #E65100; }
+  .tag-priority-3 { background: #FFEBEE; color: #C62828; }
+  .tag-date { background: var(--primary-light); color: var(--primary-dark); }
+  .tag-screenshot { background: #F3E5F5; color: #6A1B9A; }
+
+  /* Calendar */
+  .calendar-controls { display: flex; align-items: center; gap: 8px; }
+  .cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    background: white;
+    border-radius: var(--radius);
+    padding: 12px;
+    margin-bottom: 20px;
+  }
+  .cal-header {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    margin-bottom: 4px;
+  }
+  .cal-header span {
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 600;
+  }
+  .cal-cell {
+    aspect-ratio: 1;
+    background: var(--bg);
+    border-radius: 6px;
+    padding: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex; flex-direction: column;
+    font-size: 13px;
+    position: relative;
+    overflow: hidden;
+  }
+  .cal-cell:hover { background: var(--primary-light); }
+  .cal-cell.other-month { opacity: 0.3; }
+  .cal-cell.today { background: var(--primary); color: white; }
+  .cal-cell.selected { outline: 2px solid var(--primary); outline-offset: 2px; }
+  .cal-date { font-weight: 600; }
+  .cal-events { margin-top: auto; display: flex; gap: 2px; }
+  .cal-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--primary);
+  }
+  .cal-cell.today .cal-dot { background: white; }
+
+  .marquee-container {
+    width: 100%;
+    overflow: hidden;
+    margin-top: 4px;
+  }
+  .marquee-text {
+    display: inline-block;
+    white-space: nowrap;
+    font-size: 10px;
+    color: var(--text-secondary);
+    animation: marquee 10s linear infinite;
+  }
+  .cal-cell.today .marquee-text { color: rgba(255,255,255,0.9); }
+
+  @keyframes marquee {
+    0% { transform: translateX(100%); }
+    100% { transform: translateX(-100%); }
+  }
+
+  /* Day events */
+  .day-events {
+    background: white;
+    border-radius: var(--radius);
+    padding: 16px;
+    border: 1px solid var(--border);
+  }
+  .day-events h3 { margin-bottom: 12px; }
+  .day-event-item {
+    padding: 10px;
+    border-left: 3px solid var(--primary);
+    margin-bottom: 8px;
+    background: var(--bg);
+    border-radius: 0 6px 6px 0;
+  }
+  .day-event-title { font-size: 14px; font-weight: 500; }
+  .day-event-meta { font-size: 12px; color: var(--text-secondary); }
+
+  /* Tabs */
+  .tab-view { display: none; }
+  .tab-view.active { display: block; }
+
+  /* Footer */
+  .footer {
+    background: var(--bg-sidebar);
+    color: white;
+    padding: 40px 20px;
+    text-align: center;
+  }
+  .footer a { color: var(--primary-light); text-decoration: none; }
+  .footer a:hover { text-decoration: underline; }
+  .social-links {
+    display: flex; gap: 16px; justify-content: center;
+    margin-top: 16px;
+  }
+  .social-links a {
+    width: 40px; height: 40px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    transition: all 0.2s;
+  }
+  .social-links a:hover { background: rgba(255,255,255,0.2); }
+
+  /* Demo animation */
+  .demo-highlight {
+    animation: highlight 2s ease-in-out;
+  }
+  @keyframes highlight {
+    0%, 100% { background: white; }
+    50% { background: #FFF9C4; }
+  }
+
+  .new-task-pulse {
+    animation: pulse-new 0.5s ease-out;
+  }
+  @keyframes pulse-new {
+    0% { transform: scale(0.95); opacity: 0.5; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .hero h1 { font-size: 32px; }
+    .app-sidebar { width: 60px; }
+    .app-logo-text, .app-nav-item span:not(.app-nav-icon), .app-stats { display: none; }
+    .features-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Hero Section -->
+<section class="hero">
+  <div class="hero-content">
+    <h1>SmartCapture</h1>
+    <p class="subtitle">📋 剪贴板 · 📷 截图 · 🤖 AI → 待办事项</p>
+    <p class="tagline">把生活中每个灵光一闪的想法，都变成可执行的待办</p>
+    <div class="cta-buttons">
+      <a href="https://github.com/stevenabing163/SmartCapture/releases" class="btn-cta btn-cta-primary">
+        ⬇ 下载最新版本
+      </a>
+      <a href="https://github.com/stevenabing163/SmartCapture" class="btn-cta btn-cta-secondary">
+        ⭐ GitHub 仓库
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- Features -->
+<div class="container">
+  <h2 class="section-title">✨ 核心功能</h2>
+  <p class="section-subtitle">让你的碎片时间不再溜走</p>
+
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon">📋</div>
+      <h3>剪贴板自动捕获</h3>
+      <p>复制任何文本后自动识别待办信息，支持相对时间、地点、优先级等智能提取</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📷</div>
+      <h3>区域截图 → 待办</h3>
+      <p>框选屏幕任意区域，可选择直接存为待办或 AI 智能识别图片中的文字内容</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📅</div>
+      <h3>日历视图</h3>
+      <p>月视图展示所有事件，点击日期查看当天完整待办内容，一目了然</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🤖</div>
+      <h3>AI 智能解析</h3>
+      <p>调用 LLM API 深度解析自然语言，理解"下周三下午3点开会"等复杂时间表达</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🔔</div>
+      <h3>桌面通知提醒</h3>
+      <p>任务到期自动弹出系统桌面通知，支持多级提前提醒设置</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">⌨️</div>
+      <h3>全局快捷键</h3>
+      <p>无论在哪个应用中，按下快捷键即可快速截图、捕获、显示窗口</p>
+    </div>
+  </div>
+</div>
+
+<!-- Interactive Preview -->
+<div class="container" style="padding-top: 0;">
+  <h2 class="section-title">🖥️ 在线交互演示</h2>
+  <p class="section-subtitle">点击侧边栏切换视图，体验完整交互</p>
+
+  <div class="preview-section">
+    <div class="preview-toolbar">
+      <div class="preview-dot red"></div>
+      <div class="preview-dot yellow"></div>
+      <div class="preview-dot green"></div>
+      <span class="preview-title">SmartCapture — 智能待办捕获</span>
+    </div>
+
+    <div class="preview-body">
+      <!-- Sidebar -->
+      <div class="app-sidebar">
+        <div class="app-logo">
+          <div class="app-logo-icon">📋</div>
+          <div class="app-logo-text">
+            <h2>SmartCapture</h2>
+            <p>智能待办捕获</p>
+          </div>
+        </div>
+        <nav class="app-nav">
+          <button class="app-nav-item active" data-tab="tasks">
+            <span class="app-nav-icon">✓</span>
+            <span>待办列表</span>
+            <span class="app-nav-badge" id="demo-badge">3</span>
+          </button>
+          <button class="app-nav-item" data-tab="calendar">
+            <span class="app-nav-icon">📅</span>
+            <span>日历视图</span>
+          </button>
+          <button class="app-nav-item" data-tab="capture">
+            <span class="app-nav-icon">🎯</span>
+            <span>捕获中心</span>
+          </button>
+          <button class="app-nav-item" data-tab="settings">
+            <span class="app-nav-icon">⚙️</span>
+            <span>设置</span>
+          </button>
+        </nav>
+        <div class="app-stats">
+          <div class="app-stat">
+            <div class="app-stat-value" id="stat-total">5</div>
+            <div class="app-stat-label">总任务</div>
+          </div>
+          <div class="app-stat">
+            <div class="app-stat-value" id="stat-pending">3</div>
+            <div class="app-stat-label">进行中</div>
+          </div>
+          <div class="app-stat">
+            <div class="app-stat-value" id="stat-done">2</div>
+            <div class="app-stat-label">已完成</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Content -->
+      <div class="app-main">
+        <!-- Toolbar -->
+        <div class="app-toolbar">
+          <input type="text" class="app-search" placeholder="搜索任务...">
+          <button class="app-btn app-btn-ghost" onclick="demoScreenshot()">📷 截图</button>
+          <button class="app-btn app-btn-ghost" onclick="demoPaste()">📋 粘贴</button>
+          <button class="app-btn app-btn-primary" onclick="demoAdd()">+ 新建</button>
+        </div>
+
+        <!-- Tasks View -->
+        <div class="tab-view active" id="view-tasks">
+          <div class="view-header">
+            <h2>待办任务</h2>
+            <div class="filter-tabs">
+              <button class="filter-tab active">全部</button>
+              <button class="filter-tab">今天</button>
+              <button class="filter-tab">进行中</button>
+              <button class="filter-tab">已完成</button>
+            </div>
+          </div>
+
+          <div class="task-list" id="demo-task-list">
+            <div class="task-card">
+              <div class="task-checkbox" onclick="toggleTask(this)"></div>
+              <div class="task-content">
+                <div class="task-title">完成项目周报 PPT</div>
+                <div class="task-meta">
+                  <span class="task-tag tag-priority-3">🔴 高</span>
+                  <span class="task-tag tag-date">📅 今天 18:00</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="task-card">
+              <div class="task-checkbox" onclick="toggleTask(this)"></div>
+              <div class="task-content">
+                <div class="task-title">给客户发报价邮件</div>
+                <div class="task-meta">
+                  <span class="task-tag tag-priority-2">🟡 中</span>
+                  <span class="task-tag tag-date">📅 明天</span>
+                  <span class="task-tag tag-screenshot">📷 截图</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="task-card">
+              <div class="task-checkbox checked" onclick="toggleTask(this)">✓</div>
+              <div class="task-content">
+                <div class="task-title">购买办公用品</div>
+                <div class="task-meta">
+                  <span class="task-tag tag-priority-1">🟢 低</span>
+                  <span class="task-tag tag-date">📅 昨天</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="task-card">
+              <div class="task-checkbox" onclick="toggleTask(this)"></div>
+              <div class="task-content">
+                <div class="task-title">参加产品评审会议</div>
+                <div class="task-meta">
+                  <span class="task-tag tag-priority-3">🔴 高</span>
+                  <span class="task-tag tag-date">📅 周五 14:00</span>
+                  <span class="task-tag tag-screenshot">📷 截图</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="task-card">
+              <div class="task-checkbox checked" onclick="toggleTask(this)">✓</div>
+              <div class="task-content">
+                <div class="task-title">整理桌面文件</div>
+                <div class="task-meta">
+                  <span class="task-tag tag-priority-1">🟢 低</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Calendar View -->
+        <div class="tab-view" id="view-calendar">
+          <div class="view-header">
+            <h2>日历视图</h2>
+            <div class="calendar-controls">
+              <button class="app-btn app-btn-ghost">◀</button>
+              <span>2026 年 8 月</span>
+              <button class="app-btn app-btn-ghost">▶</button>
+              <button class="app-btn app-btn-ghost">今天</button>
+            </div>
+          </div>
+
+          <div class="cal-header">
+            <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
+          </div>
+          <div class="cal-grid" id="cal-grid"></div>
+
+          <div class="day-events" id="day-events">
+            <h3 id="day-events-title">选择日期查看事件</h3>
+            <div class="day-event-list" id="day-event-list">
+              <p style="color: var(--text-secondary); text-align: center; padding: 20px;">
+                👆 点击日历上的日期查看当天所有待办
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Capture View -->
+        <div class="tab-view" id="view-capture">
+          <div class="view-header">
+            <h2>捕获中心</h2>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px;">
+            <div class="feature-card" style="text-align: center;">
+              <div class="feature-icon" style="margin: 0 auto 12px;">📋</div>
+              <h3>剪贴板自动捕获</h3>
+              <p>复制文本后自动解析为待办</p>
+              <label class="switch" style="margin-top: 12px; display: inline-block;">
+                <input type="checkbox" checked>
+                <span></span>
+              </label>
+            </div>
+
+            <div class="feature-card" style="text-align: center;">
+              <div class="feature-icon" style="margin: 0 auto 12px;">📷</div>
+              <h3>截图捕获</h3>
+              <p>框选区域 → AI 识别 / 直接存为待办</p>
+              <div style="display: flex; gap: 8px; justify-content: center; margin-top: 12px;">
+                <button class="app-btn app-btn-primary" onclick="demoScreenshot()">区域截图</button>
+              </div>
+            </div>
+
+            <div class="feature-card" style="text-align: center;">
+              <div class="feature-icon" style="margin: 0 auto 12px;">⌨️</div>
+              <h3>全局快捷键</h3>
+              <p>随时随地快速捕获</p>
+              <div style="margin-top: 12px; font-size: 12px; color: var(--text-secondary);">
+                <div>Ctrl+Shift+S 区域截图</div>
+                <div>Ctrl+Shift+T 显示/隐藏</div>
+                <div>Ctrl+Shift+Q 快速捕获</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Settings View -->
+        <div class="tab-view" id="view-settings">
+          <div class="view-header">
+            <h2>设置</h2>
+          </div>
+
+          <div style="background: white; border-radius: var(--radius); padding: 24px; border: 1px solid var(--border);">
+            <h3 style="margin-bottom: 16px;">🤖 AI 解析配置</h3>
+            <div style="display: grid; gap: 12px; margin-bottom: 16px;">
+              <div>
+                <label style="font-size: 13px; color: var(--text-secondary);">API 端点</label>
+                <input type="text" placeholder="https://api.deepseek.com/v1/chat/completions" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: var(--radius);">
+              </div>
+              <div>
+                <label style="font-size: 13px; color: var(--text-secondary);">API 密钥</label>
+                <input type="password" placeholder="sk-..." style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: var(--radius);">
+              </div>
+              <div>
+                <label style="font-size: 13px; color: var(--text-secondary);">模型名称</label>
+                <input type="text" placeholder="deepseek-chat" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: var(--radius);">
+              </div>
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <button class="app-btn app-btn-primary">保存配置</button>
+              <button class="app-btn app-btn-ghost">🔌 测试连接</button>
+            </div>
+            <p style="margin-top: 16px; color: var(--text-secondary); font-size: 13px;">
+              💡 不配置 AI 也能用！内置规则解析器可离线识别常见时间模式。
+            </p>
+          </div>
+
+          <div style="background: white; border-radius: var(--radius); padding: 24px; border: 1px solid var(--border); margin-top: 16px;">
+            <h3 style="margin-bottom: 12px;">📱 手机访问 (PWA)</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 12px;">手机和电脑在同一 WiFi 下时，手机浏览器打开局域网地址即可使用</p>
+            <code style="background: var(--bg); padding: 8px 16px; border-radius: var(--radius); display: inline-block;">http://192.168.1.100:3000</code>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Footer -->
+<footer class="footer">
+  <h2 style="margin-bottom: 8px;">SmartCapture</h2>
+  <p style="opacity: 0.8;">由 <strong>King with Trae</strong> 制作 · 让想法不再溜走</p>
+  <div class="social-links">
+    <a href="https://github.com/stevenabing163/SmartCapture" title="GitHub">⭐</a>
+    <a href="https://github.com/stevenabing163/SmartCapture/releases" title="Download">⬇</a>
+  </div>
+  <p style="margin-top: 24px; font-size: 13px; opacity: 0.6;">
+    MIT License · © 2026 King with Trae
+  </p>
+</footer>
+
+<script>
+  // Tab switching
+  document.querySelectorAll('.app-nav-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const tab = item.dataset.tab;
+      document.querySelectorAll('.app-nav-item').forEach(n => n.classList.remove('active'));
+      item.classList.add('active');
+      document.querySelectorAll('.tab-view').forEach(v => v.classList.remove('active'));
+      document.getElementById('view-' + tab).classList.add('active');
+    });
+  });
+
+  // Filter tabs
+  document.querySelectorAll('.filter-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+    });
+  });
+
+  // Calendar rendering
+  function renderCalendar() {
+    const grid = document.getElementById('cal-grid');
+    const today = 6; // Mock: Aug 6, 2026 is Thursday
+    const events = {
+      3: ['团队周会', '📷 报价单截图'],
+      5: ['产品评审'],
+      6: ['完成周报 PPT', '给客户发邮件'],
+      7: ['参加产品评审'],
+      10: ['月度总结'],
+      12: ['客户拜访'],
+      15: ['团建活动'],
+    };
+    const firstDay = 5; // Aug 1 is Saturday → offset
+    const daysInMonth = 31;
+
+    let html = '';
+    // Previous month days
+    for (let i = firstDay - 1; i >= 0; i--) {
+      html += '<div class="cal-cell other-month"><div class="cal-date">' + (31 - i) + '</div></div>';
+    }
+    // Current month
+    for (let d = 1; d <= daysInMonth; d++) {
+      const isToday = d === today;
+      const dayEvents = events[d] || [];
+      const classes = ['cal-cell'];
+      if (isToday) classes.push('today');
+      if (dayEvents.length > 0) {
+        classes.push('has-events');
+      }
+      html += '<div class="' + classes.join(' ') + '" onclick="showDayEvents(' + d + ')">';
+      html += '<div class="cal-date">' + d + '</div>';
+      if (dayEvents.length > 0) {
+        html += '<div class="cal-events">';
+        for (let i = 0; i < Math.min(dayEvents.length, 3); i++) {
+          html += '<div class="cal-dot"></div>';
+        }
+        html += '</div>';
+        html += '<div class="marquee-container"><div class="marquee-text">';
+        html += dayEvents.join(' · ');
+        html += '</div></div>';
+      }
+      html += '</div>';
+    }
+    grid.innerHTML = html;
+  }
+
+  function showDayEvents(day) {
+    const title = document.getElementById('day-events-title');
+    const list = document.getElementById('day-event-list');
+    const events = {
+      3: [{title: '团队周会', meta: '10:00 - 11:00 · 优先级: 高'}, {title: '📷 报价单截图', meta: '截图待办 · 直接存为待办'}],
+      5: [{title: '产品评审', meta: '14:00 - 15:30 · 优先级: 高'}],
+      6: [{title: '完成周报 PPT', meta: '18:00 截止 · 优先级: 高'}, {title: '给客户发报价邮件', meta: '明天 · 优先级: 中'}],
+      7: [{title: '参加产品评审会议', meta: '14:00 · 优先级: 高 · 📷 截图'}],
+      10: [{title: '月度总结', meta: '下午 · 优先级: 中'}],
+      12: [{title: '客户拜访', meta: '全天 · 优先级: 高'}],
+      15: [{title: '团建活动', meta: '全天 · 优先级: 低'}],
+    };
+    const dayEvents = events[day];
+    title.textContent = '2026年8月' + day + '日 事件';
+    if (dayEvents && dayEvents.length > 0) {
+      list.innerHTML = dayEvents.map(e =>
+        '<div class="day-event-item"><div class="day-event-title">' + e.title + '</div><div class="day-event-meta">' + e.meta + '</div></div>'
+      ).join('');
+    } else {
+      list.innerHTML = '<p style="color: var(--text-secondary); text-align: center; padding: 20px;">📭 当天没有待办事项</p>';
+    }
+  }
+
+  // Demo functions
+  function toggleTask(checkbox) {
+    if (checkbox.classList.contains('checked')) {
+      checkbox.classList.remove('checked');
+      checkbox.textContent = '';
+      checkbox.closest('.task-card').classList.remove('completed');
+    } else {
+      checkbox.classList.add('checked');
+      checkbox.textContent = '✓';
+      checkbox.closest('.task-card').classList.add('completed');
+    }
+    updateStats();
+  }
+
+  function updateStats() {
+    const total = document.querySelectorAll('#demo-task-list .task-card').length;
+    const done = document.querySelectorAll('#demo-task-list .task-card.completed').length;
+    document.getElementById('stat-total').textContent = total;
+    document.getElementById('stat-done').textContent = done;
+    document.getElementById('stat-pending').textContent = total - done;
+    document.getElementById('demo-badge').textContent = total - done;
+  }
+
+  function demoScreenshot() {
+    const newTask = document.createElement('div');
+    newTask.className = 'task-card new-task-pulse';
+    newTask.innerHTML = `
+      <div class="task-checkbox" onclick="toggleTask(this)"></div>
+      <div class="task-content">
+        <div class="task-title">📷 截图待办 - ${new Date().toLocaleString('zh-CN')}</div>
+        <div class="task-meta">
+          <span class="task-tag tag-priority-2">🟡 中</span>
+          <span class="task-tag tag-screenshot">📷 截图</span>
+        </div>
+      </div>
+    `;
+    const list = document.getElementById('demo-task-list');
+    list.insertBefore(newTask, list.firstChild);
+    showToast('📷 截图已保存为待办');
+    updateStats();
+  }
+
+  function demoPaste() {
+    const newTask = document.createElement('div');
+    newTask.className = 'task-card new-task-pulse';
+    newTask.innerHTML = `
+      <div class="task-checkbox" onclick="toggleTask(this)"></div>
+      <div class="task-content">
+        <div class="task-title">💡 会议准备：准备 Q3 财务数据报表</div>
+        <div class="task-meta">
+          <span class="task-tag tag-priority-3">🔴 高</span>
+          <span class="task-tag tag-date">📅 下周一</span>
+        </div>
+      </div>
+    `;
+    const list = document.getElementById('demo-task-list');
+    list.insertBefore(newTask, list.firstChild);
+    showToast('📋 已解析并保存为待办');
+    updateStats();
+  }
+
+  function demoAdd() {
+    const title = prompt('输入任务内容：');
+    if (!title) return;
+    const newTask = document.createElement('div');
+    newTask.className = 'task-card new-task-pulse';
+    newTask.innerHTML = `
+      <div class="task-checkbox" onclick="toggleTask(this)"></div>
+      <div class="task-content">
+        <div class="task-title">${title}</div>
+        <div class="task-meta">
+          <span class="task-tag tag-priority-2">🟡 中</span>
+        </div>
+      </div>
+    `;
+    const list = document.getElementById('demo-task-list');
+    list.insertBefore(newTask, list.firstChild);
+    showToast('✅ 任务已创建');
+    updateStats();
+  }
+
+  // Toast notifications
+  function showToast(msg) {
+    const toast = document.createElement('div');
+    toast.style.cssText = 'position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #2C3E50; color: white; padding: 12px 24px; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); z-index: 9999; animation: toastIn 0.3s ease-out;';
+    toast.textContent = msg;
+    document.body.appendChild(toast);
+    setTimeout(() => {
+      toast.style.animation = 'toastOut 0.3s ease-out forwards';
+      setTimeout(() => toast.remove(), 300);
+    }, 2000);
+  }
+
+  // Add toast animations
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes toastIn { from { opacity: 0; transform: translateX(-50%) translateY(20px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+    @keyframes toastOut { from { opacity: 1; transform: translateX(-50%) translateY(0); } to { opacity: 0; transform: translateX(-50%) translateY(-20px); } }
+  `;
+  document.head.appendChild(style);
+
+  // Initialize
+  renderCalendar();
+  updateStats();
+</script>
+
+</body>
+</html>
