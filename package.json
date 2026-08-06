@@ -1,0 +1,68 @@
+{
+  "name": "smart-capture",
+  "version": "0.1.0",
+  "description": "Windows 桌面端智能待办捕获工具 — 剪贴板/截图/通讯内容 → 待办/日历",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "build": "electron-builder --win",
+    "build:portable": "node build-portable.js",
+    "build:dir": "electron-builder --win portable",
+    "build:mac": "electron-builder --mac",
+    "build:linux": "electron-builder --linux",
+    "pack": "electron-builder --dir"
+  },
+  "author": "King with Trae",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^28.3.3",
+    "electron-builder": "^24.9.1"
+  },
+  "build": {
+    "appId": "com.smartcapture.app",
+    "productName": "SmartCapture",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "**/*",
+      "!dist",
+      "!data",
+      "!*.log"
+    ],
+    "extraMetadata": {
+      "main": "main.js"
+    },
+    "asar": true,
+    "electronDownload": {
+      "mirror": "https://npmmirror.com/mirrors/electron/"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        },
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "src/ui/icons/icon-512.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "SmartCapture"
+    }
+  },
+  "allowScripts": {
+    "electron@28.3.3": true
+  },
+  "dependencies": {
+    "sql.js": "^1.14.1"
+  }
+}

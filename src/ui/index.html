@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>SmartCapture — 智能待办捕获</title>
+  <link rel="stylesheet" href="styles.css?v=8">
+
+  <!-- PWA -->
+  <meta name="theme-color" content="#4A90D9">
+  <meta name="description" content="智能待办捕获工具，让碎片化信息不再被遗忘">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="待办捕获">
+  <meta name="mobile-web-app-capable" content="yes">
+</head>
+<body>
+  <!-- 侧边栏 -->
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-icon">📋</div>
+      <div class="logo-text">
+        <h1>SmartCapture</h1>
+        <p>智能待办捕获</p>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <button class="nav-item active" data-view="tasks">
+        <span class="nav-icon">✓</span>
+        <span>待办列表</span>
+        <span class="nav-badge" id="badge-today">0</span>
+      </button>
+      <button class="nav-item" data-view="calendar">
+        <span class="nav-icon">📅</span>
+        <span>日历视图</span>
+      </button>
+      <button class="nav-item" data-view="capture">
+        <span class="nav-icon">🎯</span>
+        <span>捕获中心</span>
+      </button>
+      <button class="nav-item" data-view="settings">
+        <span class="nav-icon">⚙️</span>
+        <span>设置</span>
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="stats" id="stats">
+        <div class="stat-item">
+          <span class="stat-value" id="stat-total">0</span>
+          <span class="stat-label">总任务</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value" id="stat-pending">0</span>
+          <span class="stat-label">进行中</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value" id="stat-done">0</span>
+          <span class="stat-label">已完成</span>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- 主内容区 -->
+  <main class="main">
+    <!-- 顶部工具栏 -->
+    <header class="toolbar">
+      <div class="search-box">
+        <input type="text" id="search-input" placeholder="搜索任务...">
+      </div>
+      <div class="toolbar-actions">
+        <button class="btn btn-ghost" id="btn-screenshot" title="截图 (Ctrl+Shift+A)">
+          <span>📷</span> 截图
+        </button>
+        <button class="btn btn-ghost" id="btn-paste" title="粘贴内容">
+          <span>📋</span> 粘贴
+        </button>
+        <button class="btn btn-primary" id="btn-add">
+          <span>+</span> 新建任务
+        </button>
+      </div>
+    </header>
+
+    <!-- 待办列表视图 -->
+    <section class="view view-tasks active" id="view-tasks">
+      <div class="view-header">
+        <h2>待办任务</h2>
+        <div class="filter-tabs">
+          <button class="tab active" data-filter="all">全部</button>
+          <button class="tab" data-filter="today">今天</button>
+          <button class="tab" data-filter="pending">进行中</button>
+          <button class="tab" data-filter="completed">已完成</button>
+        </div>
+      </div>
+
+      <div class="task-list" id="task-list">
+        <!-- 任务卡片将由 JS 动态生成 -->
+      </div>
+
+      <div class="empty-state" id="empty-state" style="display:none;">
+        <div class="empty-icon">📝</div>
+        <h3>还没有任务</h3>
+        <p>试试以下方式快速创建：</p>
+        <div class="empty-tips">
+          <button class="btn btn-outline" id="tip-clipboard">📋 粘贴文本</button>
+          <button class="btn btn-outline" id="tip-screenshot">📷 截图捕获</button>
+          <button class="btn btn-outline" id="tip-add">+ 手动创建</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 日历视图 -->
+    <section class="view view-calendar" id="view-calendar">
+      <div class="view-header">
+        <h2>日历视图</h2>
+        <div class="calendar-controls">
+          <button class="btn btn-ghost" id="cal-prev">◀</button>
+          <span id="cal-title"></span>
+          <button class="btn btn-ghost" id="cal-next">▶</button>
+          <button class="btn btn-ghost" id="cal-today">今天</button>
+        </div>
+      </div>
+
+      <div class="calendar" id="calendar">
+        <div class="cal-header">
+          <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
+        </div>
+        <div class="cal-grid" id="cal-grid">
+          <!-- 日历格子将由 JS 动态生成 -->
+        </div>
+      </div>
+
+      <div class="day-events" id="day-events">
+        <h3 id="day-events-title">选择日期查看事件</h3>
+        <div class="day-event-list" id="day-event-list"></div>
+      </div>
+    </section>
+
+    <!-- 捕获中心 -->
+    <section class="view view-capture" id="view-capture">
+      <div class="view-header">
+        <h2>捕获中心</h2>
+      </div>
+
+      <div class="capture-section">
+        <div class="capture-card">
+          <div class="capture-icon">📋</div>
+          <h3>剪贴板自动捕获</h3>
+          <p>当你复制任何文本时，自动检测并提取待办事项</p>
+          <div class="capture-status">
+            <label class="switch">
+              <input type="checkbox" id="toggle-clipboard" checked>
+              <span class="slider"></span>
+            </label>
+            <span id="clipboard-status" class="status-on">已开启</span>
+          </div>
+        </div>
+
+        <div class="capture-card">
+          <div class="capture-icon">📷</div>
+          <h3>截图捕获</h3>
+          <p>截取屏幕并通过 AI 识别其中的待办信息</p>
+          <div class="capture-actions">
+            <button class="btn btn-primary" id="btn-capture-full">全屏截图</button>
+            <button class="btn btn-primary" id="btn-capture-region">区域截图</button>
+          </div>
+        </div>
+
+        <div class="capture-card">
+          <div class="capture-icon">⌨️</div>
+          <h3>全局快捷键</h3>
+          <div class="hotkey-list" id="hotkey-list">
+            <!-- 快捷键列表 -->
+          </div>
+        </div>
+      </div>
+
+      <!-- 最近捕获 -->
+      <div class="recent-captures">
+        <h3>最近捕获</h3>
+        <div class="capture-history" id="capture-history">
+          <p class="empty-hint">暂无捕获记录</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 设置视图 -->
+    <section class="view view-settings" id="view-settings">
+      <div class="view-header">
+        <h2>设置</h2>
+      </div>
+
+      <div class="settings-section">
+        <h3>AI 解析配置</h3>
+        <div class="form-group">
+          <label>API 端点</label>
+          <input type="text" id="setting-ai-endpoint" placeholder="https://api.deepseek.com/v1/chat/completions">
+        </div>
+        <div class="form-group">
+          <label>API 密钥</label>
+          <input type="password" id="setting-ai-key" placeholder="sk-...">
+        </div>
+        <div class="form-group">
+          <label>模型名称</label>
+          <input type="text" id="setting-ai-model" placeholder="deepseek-chat">
+        </div>
+        <button class="btn btn-primary" id="btn-save-ai">保存 AI 配置</button>
+        <button class="btn btn-outline" id="btn-test-ai" style="margin-left:8px;">🔌 测试连接</button>
+        <div id="ai-test-result" style="margin-top:10px; font-size:13px;"></div>
+      </div>
+
+      <div class="settings-section">
+        <h3>捕获设置</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label>监听剪贴板</label>
+            <label class="switch">
+              <input type="checkbox" id="setting-monitor-clipboard" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="form-group">
+            <label>轮询间隔 (ms)</label>
+            <input type="number" id="setting-poll-interval" min="500" max="5000" step="500" value="1000">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>自动解析剪贴板内容</label>
+          <label class="switch">
+            <input type="checkbox" id="setting-auto-parse" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3>任务提醒</h3>
+        <div class="form-group">
+          <label>启用到期提醒</label>
+          <label class="switch">
+            <input type="checkbox" id="setting-enable-reminders" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="form-group">
+          <label>提前提醒时间（分钟）</label>
+          <input type="number" id="setting-reminder-advance" min="0" max="1440" step="5" value="15">
+          <small>设为 0 则在到期时才提醒</small>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-outline" id="btn-test-reminder">🔔 测试提醒</button>
+          <button class="btn btn-primary" id="btn-save-reminder">保存提醒设置</button>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3>数据管理</h3>
+        <div class="data-actions">
+          <button class="btn btn-outline" id="btn-export">导出数据</button>
+          <button class="btn btn-outline" id="btn-import">导入数据</button>
+          <button class="btn btn-danger" id="btn-clear">清空所有数据</button>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3>📱 手机访问</h3>
+        <p class="settings-desc">手机和电脑在同一 WiFi 下时，手机浏览器打开下方地址即可使用</p>
+        <div class="webserver-info" id="webserver-info">
+          <span class="loading">获取中...</span>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-outline" id="btn-copy-addr">📋 复制地址</button>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3>关于</h3>
+        <p>SmartCapture v0.1.0</p>
+        <p>一款智能待办捕获工具，让碎片化信息不再被遗忘。</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- 新建/编辑任务弹窗 -->
+  <div class="modal" id="task-modal">
+    <div class="modal-overlay"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modal-title">新建任务</h3>
+        <button class="modal-close" id="modal-close">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>任务标题</label>
+          <input type="text" id="input-title" placeholder="输入任务内容...">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>类型</label>
+            <select id="input-type">
+              <option value="todo">待办</option>
+              <option value="event">日历事件</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>优先级</label>
+            <select id="input-priority">
+              <option value="1">低</option>
+              <option value="2" selected>中</option>
+              <option value="3">高</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>截止日期</label>
+            <input type="datetime-local" id="input-due">
+          </div>
+          <div class="form-group">
+            <label>地点</label>
+            <input type="text" id="input-location" placeholder="可选">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>🔔 提醒时间 <span class="hint" id="reminder-hint"></span></label>
+          <div class="reminder-presets" id="reminder-presets">
+            <button type="button" class="chip" data-min="0">到期时</button>
+            <button type="button" class="chip" data-min="5">5 分钟前</button>
+            <button type="button" class="chip" data-min="10">10 分钟前</button>
+            <button type="button" class="chip" data-min="15">15 分钟前</button>
+            <button type="button" class="chip" data-min="30">30 分钟前</button>
+            <button type="button" class="chip" data-min="60">1 小时前</button>
+            <button type="button" class="chip" data-min="1440">1 天前</button>
+          </div>
+          <div class="reminder-list" id="reminder-list"></div>
+          <div class="reminder-add">
+            <input type="number" id="reminder-custom-min" min="0" max="10080" placeholder="自定义分钟数 (如 120)">
+            <button type="button" class="btn btn-outline btn-sm" id="reminder-add-custom">+ 添加</button>
+          </div>
+        </div>
+        <div class="form-group" id="raw-section" style="display:none;">
+          <label>原始文本</label>
+          <div class="raw-text" id="input-raw"></div>
+        </div>
+        <div class="form-group" id="image-section" style="display:none;">
+          <label>📷 截图附件</label>
+          <img id="task-image" style="max-width:100%; max-height:300px; border-radius:8px; cursor:pointer; border:1px solid var(--border, #e0e0e0);" onclick="window.__previewImage(this.src)">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" id="modal-cancel">取消</button>
+        <button class="btn btn-primary" id="modal-save">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 解析结果弹窗 -->
+  <div class="modal" id="parse-modal">
+    <div class="modal-overlay"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>解析结果</h3>
+        <button class="modal-close" id="parse-close">✕</button>
+      </div>
+      <div class="modal-body" id="parse-body">
+        <!-- 解析结果 -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" id="parse-skip">跳过</button>
+        <button class="btn btn-primary" id="parse-save-all">全部保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 截图处理选择弹窗 -->
+  <div class="modal" id="screenshot-modal">
+    <div class="modal-overlay" onclick="window.__closeScreenshotDialog?.()"></div>
+    <div class="modal-content" style="max-width:500px;">
+      <div class="modal-header">
+        <h3>📷 截图已完成</h3>
+        <button class="modal-close" onclick="window.__closeScreenshotDialog?.()">✕</button>
+      </div>
+      <div class="modal-body" style="text-align:center;">
+        <img id="screenshot-preview" style="max-width:100%; max-height:300px; border-radius:8px; border:1px solid var(--border, #e0e0e0);">
+        <p style="margin-top:16px; color: var(--text-secondary); font-size:14px;">请选择处理方式：</p>
+      </div>
+      <div class="modal-footer" style="flex-direction:column; gap:10px;">
+        <button class="btn btn-primary" onclick="window.__parseScreenshot?.()" style="width:100%;">🤖 AI 智能识别</button>
+        <button class="btn btn-outline" onclick="window.__saveScreenshotAsTask?.()" style="width:100%;">📌 直接存为待办</button>
+        <button class="btn btn-ghost" onclick="window.__closeScreenshotDialog?.()" style="width:100%;">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 图片预览弹窗 -->
+  <div class="modal" id="image-preview-modal">
+    <div class="modal-overlay" onclick="window.__closeImagePreview?.()"></div>
+    <div style="position:relative; max-width:90vw; max-height:90vh;">
+      <img id="image-preview-img" style="max-width:90vw; max-height:85vh; border-radius:8px; box-shadow:0 10px 40px rgba(0,0,0,0.3);">
+      <button onclick="window.__closeImagePreview?.()" style="position:absolute; top:-12px; right:-12px; width:36px; height:36px; border-radius:50%; background:var(--bg-card,white); border:1px solid var(--border); cursor:pointer; font-size:18px; box-shadow:0 2px 8px rgba(0,0,0,0.2);">✕</button>
+    </div>
+  </div>
+
+  <!-- Toast 通知 -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <script src="renderer.js?v=13"></script>
+</body>
+</html>
