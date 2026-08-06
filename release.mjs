@@ -157,42 +157,22 @@ function main() {
   const currentVersion = getCurrentVersion();
   console.log(`\n📦 当前版本: ${currentVersion}`);
 
-  // Determine target version
   let targetVersion;
   if (opts.version) {
-    targetVersion = opts.version;
+    // version can be "patch", "minor", "major", or a specific version like "1.0.0"
+    if (['patch', 'minor', 'major'].includes(opts.version)) {
+      targetVersion = bumpVersion(currentVersion, opts.version);
+    } else {
+      targetVersion = opts.version;
+    }
+    console.log(`🎯 目标版本: ${targetVersion}`);
   } else {
-    console.log('\n选择版本类型:');
-    console.log('  1) patch (补丁) - ' + bumpVersion(currentVersion, 'patch'));
-    console.log('  2) minor (次版本) - ' + bumpVersion(currentVersion, 'minor'));
-    console.log('  3) major (主版本) - ' + bumpVersion(currentVersion, 'major'));
-    console.log('  4) 自定义版本号');
-    
-    const readline = require('readline');
-    const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-    
-    rl.question('\n请选择 [1-4]: ', (choice) => {
-      switch (choice.trim()) {
-        case '1': targetVersion = bumpVersion(currentVersion, 'patch'); break;
-        case '2': targetVersion = bumpVersion(currentVersion, 'minor'); break;
-        case '3': targetVersion = bumpVersion(currentVersion, 'major'); break;
-        case '4':
-          rl.question('输入版本号 (如 1.2.0): ', (v) => {
-            targetVersion = v.trim();
-            rl.close();
-            doRelease(targetVersion, opts);
-          });
-          return;
-        default: targetVersion = bumpVersion(currentVersion, 'patch');
-      }
-      rl.close();
-      doRelease(targetVersion, opts);
-    });
+    // Default: bump patch
+    targetVersion = bumpVersion(currentVersion, 'patch');
+    console.log(`🎯 默认升级: ${currentVersion} → ${targetVersion} (patch)`);
   }
 
-  if (targetVersion) {
-    doRelease(targetVersion, opts);
-  }
+  doRelease(targetVersion, opts);
 }
 
 function doRelease(version, opts) {

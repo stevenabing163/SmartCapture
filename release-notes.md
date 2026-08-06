@@ -1,37 +1,31 @@
-## 🎉 新版本特性
+## 🎉 SmartCapture v1.0.0
 
-- 📷 区域截图 → 直接存为待办（无需 AI）
-- 🤖 AI 智能识别截图文字内容
-- 📋 剪贴板自动捕获
-- 📅 日历视图（点击日期查看当天完整待办）
-- 🔔 桌面通知提醒
-- ⌨️ 全局快捷键支持
+## 🐛 Bug Fixes & Improvements
 
-## 📦 下载
-
-| 文件 | 说明 |
-|------|------|
-| SmartCapture-Portable.zip | Windows 便携版（解压即用） |
-
-## 🚀 快速开始
-
-1. 下载 `SmartCapture-Portable.zip`
-2. 解压到任意目录
-3. 双击 `SmartCapture.exe` 运行
-
-> ⚠️ Windows SmartScreen 提示时，点击「更多信息」→「仍要运行」
-
-## 🔧 系统要求
-
-- Windows 10/11（64位）
-- 约 400MB 磁盘空间
-
-## 📝 更新日志
-
-### v1.0.0
-- 首个稳定版本发布
-- 完整的待办管理功能
-- AI 解析 + 规则解析双模式
-- 截图直接存为待办
-- 日历视图交互优化
+- 完善手机局域网访问功能
+- 优化日历视图交互
 - 代码清理与文档完善
+
+## 📦 Download
+
+| File | Description |
+|------|-------------|
+| SmartCapture-Portable.zip | Windows Portable (extract & run) |
+
+## 🚀 Quick Start
+
+1. Download `SmartCapture-Portable.zip`
+2. Extract to any directory
+3. Double-click `SmartCapture.exe`
+
+> ⚠️ Windows SmartScreen: Click **"More info" → "Run anyway"**
+
+## 🔧 System Requirements
+
+- Windows 10/11 (64-bit)
+- ~400 MB disk space
+- Optional: Internet for AI features
+
+---
+
+*Released by King with Trae*
